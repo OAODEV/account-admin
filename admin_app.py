@@ -7,11 +7,16 @@ from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
 from models import ClientOrganization, Employee, Product
 
+
+def make_secret_key():
+    key = os.urandom(24).hex()
+    return(key)
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dumb-secret')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DBURL', (
     'postgres://account_admin_user@localhost:5433'
-    '/account_admin?sslmode=verify-ca'))
+    '/account_admin'))
 db = SQLAlchemy(app)
 
 
@@ -36,7 +41,8 @@ class ClientAdmin(ModelView):
     column_searchable_list = ('client_organization_name', )
     column_default_sort = ('client_organization_name')
     column_sortable_list = (('account_manager', 'account_manager.last_name'),
-                            'client_organization_name', 'dfp_network_code')
+                            'client_organization_name', 'dfp_network_code',
+                            'dfp_display_name')
     column_filters = [Employee.email, ClientOrganization.dfp_network_code]
     column_auto_select_related = True
     form_excluded_columns = ['created_datetime', 'modified_datetime']
