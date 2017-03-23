@@ -68,7 +68,6 @@ def main():
     # Get all Google Users from Directory API
     results = service.users().list(
         customer='my_customer',
-        # projection='full',
         query="orgUnitPath='/Google Users'",
         orderBy='email').execute()
     users = results.get('users', [])

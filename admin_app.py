@@ -1,15 +1,14 @@
 import os
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-
+from flask_sqlalchemy import SQLAlchemy
 from models import ClientOrganization, Employee, Product
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = (
-    'ddc9ac8881219c29b4d87f2f046efc1170c5f80a10d9a2ecc81fc366c108719f')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dumb-secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DBURL', (
     'postgres://account_admin_user@localhost:5433'
     '/account_admin?sslmode=verify-ca'))
