@@ -10,7 +10,8 @@ from models import ClientOrganization, Employee, Product
 
 def make_secret_key():
     key = os.urandom(24).hex()
-    return(key)
+    return (key)
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
@@ -25,6 +26,11 @@ def index():
     return '<a href="/admin/employee/">Admin Ahoy!</a>'
 
 
+# Function to filter managers from Employee for Client form choices
+def client_managers():
+    return db.session.query(Employee).filter(Employee.account_manager_flag.is_(True))
+
+
 class ClientAdmin(ModelView):
     can_export = True
 
@@ -33,6 +39,13 @@ class ClientAdmin(ModelView):
         'client_organization_name', 'dfp_network_code', 'account_manager',
         'dfp_display_name'
     ]
+    # override WTForms query_factory with filtered manager results
+    # for account_manager
+    form_args = dict(
+        account_manager=dict(
+            query_factory=client_managers
+        )
+    )
     form_columns = [
         'client_organization_name', 'account_manager', 'assigned_account_name',
         'dfp_network_code', 'dfp_display_name', 'products',
@@ -40,14 +53,15 @@ class ClientAdmin(ModelView):
     ]
     column_searchable_list = ('client_organization_name', )
     column_default_sort = ('client_organization_name')
-    column_sortable_list = (('account_manager', 'account_manager.last_name'),
+    column_sortable_list = (('account_manager', 'account_manager.email'),
                             'client_organization_name', 'dfp_network_code',
                             'dfp_display_name')
     column_filters = [Employee.email, ClientOrganization.dfp_network_code]
     column_auto_select_related = True
     form_excluded_columns = ['created_datetime', 'modified_datetime']
     column_labels = dict(
-        client_organization_name='Client', active_client_flag='Active Client')
+        client_organization_name='Client', active_client_flag='Active Client',
+        manager='Account Manager')
 
 
 class EmployeeAdmin(ModelView):
@@ -70,8 +84,12 @@ class EmployeeAdmin(ModelView):
         'first_name', 'last_name', 'email', 'manager', 'account_manager_flag',
         'office'
     ]
-    column_editable_list = ['manager', ]
-    column_select_related_list = ['manager', ]
+    column_editable_list = [
+        'manager',
+    ]
+    column_select_related_list = [
+        'manager',
+    ]
     column_labels = dict(account_manager_flag='Acct Mgr')
 
 

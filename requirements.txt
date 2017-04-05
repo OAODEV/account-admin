@@ -14,12 +14,10 @@ oauthlib==2.0.1
 psycopg2==2.6.2
 pyasn1==0.2.3
 pyasn1-modules==0.0.8
-pyngboard==0.0.4
 requests==2.13.0
 requests-oauthlib==0.8.0
 rsa==3.4.2
 six==1.10.0
-sqlacodegen==1.1.6
 SQLAlchemy==1.1.6
 uritemplate==3.0.0
 Werkzeug==0.11.15
