@@ -28,7 +28,8 @@ def index():
 
 # Function to filter managers from Employee for Client form choices
 def client_managers():
-    return db.session.query(Employee).filter(Employee.account_manager_flag.is_(True))
+    return db.session.query(Employee).filter(
+        Employee.account_manager_flag.is_(True))
 
 
 class ClientAdmin(ModelView):
@@ -41,11 +42,7 @@ class ClientAdmin(ModelView):
     ]
     # override WTForms query_factory with filtered manager results
     # for account_manager
-    form_args = dict(
-        account_manager=dict(
-            query_factory=client_managers
-        )
-    )
+    form_args = dict(account_manager=dict(query_factory=client_managers))
     form_columns = [
         'client_organization_name', 'account_manager', 'assigned_account_name',
         'dfp_network_code', 'dfp_display_name', 'products',
@@ -60,7 +57,8 @@ class ClientAdmin(ModelView):
     column_auto_select_related = True
     form_excluded_columns = ['created_datetime', 'modified_datetime']
     column_labels = dict(
-        client_organization_name='Client', active_client_flag='Active Client',
+        client_organization_name='Client',
+        active_client_flag='Active Client',
         manager='Account Manager')
 
 
