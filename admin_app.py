@@ -1,10 +1,11 @@
 import os
 
 from flask import Flask
-
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql.functions import func
+
 from models import ClientOrganization, Employee, Product
 
 
@@ -18,6 +19,7 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DBURL', (
     'postgres://account_admin_user@localhost:5433'
     '/account_admin'))
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
@@ -63,6 +65,14 @@ class ClientAdmin(ModelView):
 
 
 class EmployeeAdmin(ModelView):
+    def get_query(self):
+        return self.session.query(self.model).filter(
+            self.model.current_employee_flag.is_(True))
+
+    def get_count_query(self):
+        return self.session.query(func.count('*')).filter(
+            self.model.current_employee_flag.is_(True))
+
     can_export = True
     can_delete = False
     can_create = False
@@ -102,12 +112,14 @@ class ProductAdmin(ModelView):
         product_type_description='Description')
 
 
-if __name__ == '__main__':
-    admin = Admin(
-        app, name='OAO Account Administration', template_mode='bootstrap3')
+# Instantiate admin globally, for wsgi container
+admin = Admin(
+    app, name='OAO Account Administration', template_mode='bootstrap3')
 
-    admin.add_view(EmployeeAdmin(Employee, db.session))
-    admin.add_view(ClientAdmin(ClientOrganization, db.session, name='Client'))
-    admin.add_view(ProductAdmin(Product, db.session))
+admin.add_view(EmployeeAdmin(Employee, db.session))
+admin.add_view(ClientAdmin(ClientOrganization, db.session, name='Client'))
+admin.add_view(ProductAdmin(Product, db.session))
+
+if __name__ == '__main__':
 
     app.run(debug=True, host='0.0.0.0', port=5000)
