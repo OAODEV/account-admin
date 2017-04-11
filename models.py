@@ -23,7 +23,7 @@ class ClientOrganization(Base):
         server_default=text("nextval("
                             "'client_organization_client_organization_id_seq'"
                             "::regclass)"))
-    client_organization_code = Column(Text, nullable=False)
+    client_organization_code = Column(Text)
     client_organization_name = Column(Text, nullable=False)
     assigned_account_name = Column(Text, nullable=False)
     account_manager_id = Column(ForeignKey('person.person_id'))
