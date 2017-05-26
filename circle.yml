@@ -16,7 +16,7 @@ dependencies:
   override:
     - echo "The build name is in here!!!" us.gcr.io/lexical-cider-93918/$herd_service_name:$herd_build_tag
     - docker build -t us.gcr.io/lexical-cider-93918/$herd_service_name:$herd_build_tag .
-    - /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
 
 test:
   override:

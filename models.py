@@ -72,8 +72,7 @@ class Employee(Base):
         server_default=text("nextval('person_person_id_seq'::regclass)"))
     manager_person_id = Column(ForeignKey('person.person_id'))
     account_manager_flag = Column(Boolean)
-    current_employee_flag = Column(Boolean)
-
+    current_employee_flag = Column(Boolean, server_default=text("true"))
     office = relationship('Office', backref='employee')
     manager = relationship(
         'Employee', remote_side=[person_id], order_by='Employee.email')
