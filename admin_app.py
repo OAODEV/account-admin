@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.model.widgets import XEditableWidget
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
 
@@ -32,6 +33,12 @@ def index():
 def client_managers():
     return db.session.query(Employee).filter(
         Employee.account_manager_flag.is_(True))
+
+
+# Function filter managers picklist to OAO managers
+def employee_managers():
+    managers = db.session.query(Employee.manager_person_id).distinct()
+    return db.session.query(Employee).filter(Employee.person_id.in_(managers))
 
 
 class ClientAdmin(ModelView):
@@ -64,6 +71,18 @@ class ClientAdmin(ModelView):
         manager='Account Manager')
 
 
+class ManagerEditableWidget(XEditableWidget):
+    '''
+    Uses employee_managers query to populate picklist in manager
+    dropdown in list view.
+    '''
+    def get_kwargs(self, subfield, kwargs):
+        kwargs = super().get_kwargs(subfield, kwargs)
+        kwargs['data-source'] = [str(e) for e in list(employee_managers())]
+
+        return kwargs
+
+
 class EmployeeAdmin(ModelView):
     def get_query(self):
         return self.session.query(self.model).filter(
@@ -73,10 +92,14 @@ class EmployeeAdmin(ModelView):
         return self.session.query(func.count('*')).filter(
             self.model.current_employee_flag.is_(True))
 
+    def get_list_form(self):
+        return self.scaffold_list_form(widget=ManagerEditableWidget())
+
+    form_args = dict(manager=dict(query_factory=employee_managers))
     can_export = True
     can_delete = False
     can_create = False
-    edit_modal = True
+    # edit_modal = True
     column_exclude_list = [
         'created_datetime',
         'modified_datetime',
@@ -85,6 +108,7 @@ class EmployeeAdmin(ModelView):
     column_default_sort = ('email')
     column_sortable_list = ('manager', 'first_name', 'last_name', 'email',
                             ('office', 'office.office_name'))
+
     form_excluded_columns = [
         'created_datetime', 'modified_datetime', 'gsuite_id'
     ]
@@ -92,9 +116,7 @@ class EmployeeAdmin(ModelView):
         'first_name', 'last_name', 'email', 'manager', 'account_manager_flag',
         'office'
     ]
-    column_editable_list = [
-        'manager',
-    ]
+    column_editable_list = ['manager']
     column_select_related_list = [
         'manager',
     ]

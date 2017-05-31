@@ -42,8 +42,7 @@ class ClientOrganization(Base):
 
 
 t_client_product_association = Table(
-    'client_product_association',
-    metadata,
+    'client_product_association', metadata,
     Column(
         'product_type_id',
         ForeignKey('product_type.product_type_id'),
@@ -75,15 +74,17 @@ class Employee(Base):
     current_employee_flag = Column(Boolean, server_default=text("true"))
     office = relationship('Office', backref='employee')
     manager = relationship(
-        'Employee', remote_side=[person_id], order_by='Employee.email')
+        'Employee',
+        remote_side=[person_id],
+        order_by='Employee.email',
+        distinct_target_key=True,
+        innerjoin=True)
 
     def __str__(self):
         return '{0} {1} ({2})'.format(self.first_name, self.last_name,
                                       self.email)
 
-    __mapper_args__ = {
-        "order_by": email
-    }
+    __mapper_args__ = {"order_by": email}
 
 
 class Office(Base):
