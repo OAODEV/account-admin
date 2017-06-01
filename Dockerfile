@@ -16,5 +16,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-# CMD crond -d 5; python3 admin_app.py
-CMD python3 admin_app.py
+CMD gunicorn -b 0.0.0.0:5000 admin_app:app --log-file=-

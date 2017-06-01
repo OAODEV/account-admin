@@ -23,7 +23,7 @@ class ClientOrganization(Base):
         server_default=text("nextval("
                             "'client_organization_client_organization_id_seq'"
                             "::regclass)"))
-    client_organization_code = Column(Text, nullable=False)
+    client_organization_code = Column(Text)
     client_organization_name = Column(Text, nullable=False)
     assigned_account_name = Column(Text, nullable=False)
     account_manager_id = Column(ForeignKey('person.person_id'))
@@ -42,8 +42,7 @@ class ClientOrganization(Base):
 
 
 t_client_product_association = Table(
-    'client_product_association',
-    metadata,
+    'client_product_association', metadata,
     Column(
         'product_type_id',
         ForeignKey('product_type.product_type_id'),
@@ -72,19 +71,20 @@ class Employee(Base):
         server_default=text("nextval('person_person_id_seq'::regclass)"))
     manager_person_id = Column(ForeignKey('person.person_id'))
     account_manager_flag = Column(Boolean)
-    current_employee_flag = Column(Boolean)
-
+    current_employee_flag = Column(Boolean, server_default=text("true"))
     office = relationship('Office', backref='employee')
     manager = relationship(
-        'Employee', remote_side=[person_id], order_by='Employee.email')
+        'Employee',
+        remote_side=[person_id],
+        order_by='Employee.email',
+        distinct_target_key=True,
+        innerjoin=True)
 
     def __str__(self):
         return '{0} {1} ({2})'.format(self.first_name, self.last_name,
                                       self.email)
 
-    __mapper_args__ = {
-        "order_by": email
-    }
+    __mapper_args__ = {"order_by": email}
 
 
 class Office(Base):
