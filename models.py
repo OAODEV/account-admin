@@ -8,13 +8,27 @@ from sqlalchemy.orm import relationship
 
 engine = create_engine(
     os.getenv('DBURL', ('postgres://account_admin_user@localhost:5433'
-                        '/account_admin?sslmode=verify-ca')))
+                        '/account_admin')))
 
 Base = declarative_base(engine)
 metadata = Base.metadata
 
 
-class ClientOrganization(Base):
+t_client_product_association = Table(
+    'client_product_association', metadata,
+    Column(
+        'product_type_id',
+        ForeignKey('product_type.product_type_id'),
+        primary_key=True,
+        nullable=False),
+    Column(
+        'client_organization_id',
+        ForeignKey('client_organization.client_organization_id'),
+        primary_key=True,
+        nullable=False))
+
+
+class Client(Base):
     __tablename__ = 'client_organization'
 
     client_organization_id = Column(
@@ -34,25 +48,38 @@ class ClientOrganization(Base):
     modified_datetime = Column(DateTime)
 
     account_manager = relationship('Employee')
-    products = relationship('Product', secondary='client_product_association')
+    products = relationship('Product',
+                            secondary=t_client_product_association,
+                            backref='client_organization',
+                            passive_deletes=True)
 
     def __str__(self):
         return '{0} ({1})'.format(self.client_organization_name,
                                   self.dfp_network_code)
 
 
-t_client_product_association = Table(
-    'client_product_association', metadata,
-    Column(
-        'product_type_id',
-        ForeignKey('product_type.product_type_id'),
+class Product(Base):
+    __tablename__ = 'product_type'
+
+    product_type_id = Column(
+        Integer,
         primary_key=True,
-        nullable=False),
-    Column(
-        'client_organization_id',
-        ForeignKey('client_organization.client_organization_id'),
-        primary_key=True,
-        nullable=False))
+        server_default=text(
+            "nextval('product_type_product_type_id_seq'::regclass)"))
+    product_type_code = Column(Text, nullable=False)
+    product_type_name = Column(Text, nullable=False)
+    product_type_description = Column(Text)
+    created_datetime = Column(DateTime, server_default=text("now()"))
+    modified_datetime = Column(DateTime)
+
+    clients = relationship(
+        'Client',
+        secondary=t_client_product_association,
+        backref='product_type'
+        )
+
+    def __str__(self):
+        return self.product_type_name
 
 
 class Employee(Base):
@@ -76,9 +103,7 @@ class Employee(Base):
     manager = relationship(
         'Employee',
         remote_side=[person_id],
-        order_by='Employee.email',
-        distinct_target_key=True,
-        innerjoin=True)
+        order_by='Employee.email')
 
     def __str__(self):
         return '{0} {1} ({2})'.format(self.first_name, self.last_name,
@@ -100,24 +125,3 @@ class Office(Base):
 
     def __str__(self):
         return self.office_name
-
-
-class Product(Base):
-    __tablename__ = 'product_type'
-
-    product_type_id = Column(
-        Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('product_type_product_type_id_seq'::regclass)"))
-    product_type_code = Column(Text, nullable=False)
-    product_type_name = Column(Text, nullable=False)
-    product_type_description = Column(Text)
-    created_datetime = Column(DateTime, server_default=text("now()"))
-    modified_datetime = Column(DateTime)
-
-    clients = relationship(
-        'ClientOrganization', secondary='client_product_association')
-
-    def __str__(self):
-        return self.product_type_name
