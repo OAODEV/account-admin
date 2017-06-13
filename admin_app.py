@@ -23,7 +23,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DBURL', (
     'postgres://account_admin_user@localhost:5433'
     '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 
 
@@ -183,9 +182,6 @@ class EmployeeAdmin(ModelView):
         'office'
     ]
     column_editable_list = ['manager']
-    # column_select_related_list = [
-    #     'manager',
-    # ]
     column_labels = dict(account_manager_flag='Account Lead')
 
 
