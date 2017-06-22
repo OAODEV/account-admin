@@ -68,7 +68,8 @@ class ProductFilter(BaseSQLAFilter):
 
 class AccountLeadFilter(BaseSQLAFilter):
     def apply(self, query, value, alias=None):
-        return query.filter(Client.account_manager.has(person_id=value))
+        return query.filter((Client.account_manager.has(person_id=value)) | (
+            Client.secondary_manager.has(person_id=value)))
 
     def operation(self):
         return 'equals'
@@ -89,7 +90,7 @@ class ClientAdmin(ModelView):
 
     column_list = [
         'client_organization_name', 'dfp_network_code', 'account_manager',
-        'dfp_display_name'
+        'secondary_manager', 'dfp_display_name'
     ]
     column_exclude_list = ['created_datetime', 'modified_datetime']
 
@@ -97,7 +98,8 @@ class ClientAdmin(ModelView):
                               'dfp_display_name', 'products.product_type_name',
                               'account_manager.email')
     column_default_sort = ('client_organization_name')
-    column_sortable_list = (('account_manager', 'account_manager.email'),
+    column_sortable_list = (('account_manager', 'account_manager.email'), (
+        'secondary_manager', 'secondary_manager.email'),
                             'client_organization_name', 'dfp_network_code',
                             'dfp_display_name')
     column_filters = [
@@ -106,9 +108,11 @@ class ClientAdmin(ModelView):
         AccountLeadFilter(
             column='account_manager',
             name='Account Lead',
-            options=[(mgr.person_id, str(mgr)) for mgr in client_managers()]),
-        ProductFilter(
-            column='products', name='Product', options=get_products())
+            options=[(mgr.person_id, str(mgr))
+                     for mgr in client_managers()]),
+        ProductFilter(column='products',
+                      name='Product',
+                      options=get_products())
     ]
 
     # override WTForms query_factory with filtered manager results
@@ -116,15 +120,16 @@ class ClientAdmin(ModelView):
     form_args = dict(account_manager=dict(
         label='Account Lead', query_factory=client_managers))
     form_columns = [
-        'client_organization_name', 'account_manager', 'assigned_account_name',
-        'dfp_network_code', 'dfp_display_name', 'products',
-        'active_client_flag'
+        'client_organization_name', 'account_manager', 'secondary_manager',
+        'assigned_account_name', 'dfp_network_code', 'dfp_display_name',
+        'products', 'active_client_flag'
     ]
     form_excluded_columns = ['created_datetime', 'modified_datetime']
     column_labels = dict(
         client_organization_name='Client',
         active_client_flag='Active Client',
         account_manager='Account Lead',
+        secondary_manager='Secondary Lead',
         dfp_network_code='DFP Network',
         dfp_display_name='DFP Display Name')
 
