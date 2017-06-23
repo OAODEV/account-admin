@@ -43,6 +43,7 @@ class Client(Base):
     secondary_manager_id = Column(ForeignKey('person.person_id'))
     dfp_network_code = Column(Integer)
     dfp_display_name = Column(Text)
+    notes = Column(Text)
     active_client_flag = Column(Boolean, server_default=text("true"))
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)

@@ -102,6 +102,7 @@ class ClientAdmin(ModelView):
         'secondary_manager', 'secondary_manager.email'),
                             'client_organization_name', 'dfp_network_code',
                             'dfp_display_name')
+    # yapf: disable
     column_filters = [
         'active_client_flag',
         'dfp_network_code',
@@ -110,10 +111,12 @@ class ClientAdmin(ModelView):
             name='Account Lead',
             options=[(mgr.person_id, str(mgr))
                      for mgr in client_managers()]),
-        ProductFilter(column='products',
-                      name='Product',
-                      options=get_products())
+        ProductFilter(
+            column='products',
+            name='Product',
+            options=get_products())
     ]
+    # yapf: enable
 
     # override WTForms query_factory with filtered manager results
     # for account_manager
@@ -122,7 +125,7 @@ class ClientAdmin(ModelView):
     form_columns = [
         'client_organization_name', 'account_manager', 'secondary_manager',
         'assigned_account_name', 'dfp_network_code', 'dfp_display_name',
-        'products', 'active_client_flag'
+        'products', 'active_client_flag', 'notes'
     ]
     form_excluded_columns = ['created_datetime', 'modified_datetime']
     column_labels = dict(
