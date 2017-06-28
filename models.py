@@ -13,7 +13,6 @@ engine = create_engine(
 Base = declarative_base(engine)
 metadata = Base.metadata
 
-
 t_client_product_association = Table(
     'client_product_association', metadata,
     Column(
@@ -41,17 +40,22 @@ class Client(Base):
     client_organization_name = Column(Text, nullable=False)
     assigned_account_name = Column(Text, nullable=False)
     account_manager_id = Column(ForeignKey('person.person_id'))
+    secondary_manager_id = Column(ForeignKey('person.person_id'))
     dfp_network_code = Column(Integer)
     dfp_display_name = Column(Text)
+    notes = Column(Text)
     active_client_flag = Column(Boolean, server_default=text("true"))
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)
 
-    account_manager = relationship('Employee')
-    products = relationship('Product',
-                            secondary=t_client_product_association,
-                            backref='client_organization',
-                            passive_deletes=True)
+    account_manager = relationship('Employee', foreign_keys=account_manager_id)
+    secondary_manager = relationship(
+        'Employee', foreign_keys=secondary_manager_id)
+    products = relationship(
+        'Product',
+        secondary=t_client_product_association,
+        backref='client_organization',
+        passive_deletes=True)
 
     def __str__(self):
         return '{0} ({1})'.format(self.client_organization_name,
@@ -75,8 +79,7 @@ class Product(Base):
     clients = relationship(
         'Client',
         secondary=t_client_product_association,
-        backref='product_type'
-        )
+        backref='product_type')
 
     def __str__(self):
         return self.product_type_name
@@ -101,9 +104,7 @@ class Employee(Base):
     current_employee_flag = Column(Boolean, server_default=text("true"))
     office = relationship('Office', backref='employee')
     manager = relationship(
-        'Employee',
-        remote_side=[person_id],
-        order_by='Employee.email')
+        'Employee', remote_side=[person_id], order_by='Employee.email')
 
     def __str__(self):
         return '{0} {1} ({2})'.format(self.first_name, self.last_name,
