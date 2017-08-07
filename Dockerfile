@@ -1,11 +1,8 @@
-FROM python:3-alpine
+FROM python:3-alpine3.6
 MAINTAINER thomas.yager-madden@adops.com
 
-RUN apk update && \
-apk add --update musl \
-build-base \
-postgresql \
-postgresql-dev
+RUN apk add --update py3-psycopg2
+
 
 COPY . /app
 WORKDIR /app
