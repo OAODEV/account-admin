@@ -7,9 +7,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import BaseSQLAFilter
 from flask_admin.model.widgets import XEditableWidget
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql.functions import func
-
 from models import Client, Employee, Product
+from sqlalchemy.sql.functions import func
 
 
 def make_secret_key():

@@ -1,0 +1,35 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+
+click = "==6.7"
+Flask = "==0.12"
+flask-admin = "==1.4.2"
+Flask-Login = "==0.4.0"
+Flask-SQLAlchemy = "==2.2"
+google-api-python-client = "==1.6.2"
+gunicorn = "==19.7.1"
+httplib2 = "==0.10.3"
+inflect = "==0.2.5"
+itsdangerous = "==0.24"
+Jinja2 = "==2.8.1"
+MarkupSafe = "==0.23"
+oauth2client = "==4.0.0"
+oauthlib = "==2.0.1"
+pyasn1 = "==0.2.3"
+pyasn1-modules = "==0.0.8"
+requests = "==2.13.0"
+requests-oauthlib = "==0.8.0"
+rsa = "==3.4.2"
+SQLAlchemy = "==1.1.6"
+uritemplate = "==3.0.0"
+Werkzeug = "==0.11.15"
+WTForms = "==2.1"
+
+
+[requires]
+python_version = "3.6"

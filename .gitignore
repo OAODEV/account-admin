@@ -10,3 +10,4 @@
 /__pycache__
 account-admin-k8s.yml
 alembic*
+Pipfile.lock
