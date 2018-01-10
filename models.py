@@ -1,8 +1,8 @@
 # coding: utf-8
 import os
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, Table,
-                        Text, create_engine, text)
+from sqlalchemy import (Boolean, Column, Date, DateTime, ForeignKey, Integer,
+                        Table, Text, create_engine, text)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -44,6 +44,12 @@ class Client(Base):
     dfp_network_code = Column(Integer)
     dfp_display_name = Column(Text)
     notes = Column(Text)
+    oao_inbox_name = Column(Text)
+    oao_escalation_group_name = Column(Text)
+    oao_shared_folder = Column(Text, comment='Path to Google Drive folder')
+    oao_wiki_page = Column(Text, comment='Polaris URL')
+    contract_start_date = Column(Date)
+    contract_end_date = Column(Date)
     active_client_flag = Column(Boolean, server_default=text("true"))
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)
