@@ -5,12 +5,11 @@ import os
 
 import httplib2
 from apiclient import discovery
+from models import Employee
 from oauth2client import client, tools
 from oauth2client.file import Storage
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from models import Employee
 
 engine = create_engine(
     os.getenv('DBURL', ('postgres://account_admin_user@localhost:5433'
@@ -68,7 +67,7 @@ def main():
     # Get all Google Users from Directory API
     results = service.users().list(
         customer='my_customer',
-        query="orgUnitPath='/Google Users'",
+        query="orgUnitPath='/Google Users' isSuspended=false",
         orderBy='email').execute()
     users = results.get('users', [])
     user_ids = [user['id'] for user in users]
