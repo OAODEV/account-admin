@@ -1,18 +1,14 @@
-FROM python:3-alpine
+FROM alpine
 MAINTAINER thomas.yager-madden@adops.com
 
-RUN apk update && \
-apk add --update musl \
-build-base \
-postgresql \
-postgresql-dev
-
+RUN apk add --no-cache python3 py3-psycopg2 git \
+&& ln -s /usr/bin/python3 /bin/python
 COPY . /app
 WORKDIR /app
-RUN echo "0 5 * * * python3 /app/google_directory_sync.py" > /tmp/crontab \
-    && crontab /tmp/crontab
+RUN echo "0 5 * * * python3 /app/google_directory_sync.py" > /etc/crontabs/root
 
-RUN pip install -r requirements.txt
+RUN pip3 install pipenv --upgrade \
+&& pipenv install --skip-lock --system
 
 EXPOSE 5000
 

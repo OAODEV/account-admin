@@ -7,9 +7,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import BaseSQLAFilter
 from flask_admin.model.widgets import XEditableWidget
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql.functions import func
-
 from models import Client, Employee, Product
+from sqlalchemy.sql.functions import func
 
 
 def make_secret_key():
@@ -19,9 +18,9 @@ def make_secret_key():
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DBURL', (
-    'postgres://account_admin_user@localhost:5454'
-    '/account_admin'))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    'DBURL', ('postgres://account_admin_user@localhost:5454'
+              '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -31,10 +30,10 @@ def index():
     return '<a href="/admin/client/?flt0_0=1">Admin Ahoy!</a>'
 
 
-'''
+"""
 Helper functions for form choices
 TODO: Pull out to own file (or add to __init__?)
-'''
+"""
 
 
 def client_managers():
@@ -53,9 +52,9 @@ def get_products():
     return [(str(product), product) for product in products]
 
 
-'''
+"""
 Custom filter classes for ClientAdmin view
-'''
+"""
 
 
 class ProductFilter(BaseSQLAFilter):
@@ -75,9 +74,9 @@ class AccountLeadFilter(BaseSQLAFilter):
         return 'equals'
 
 
-'''
+"""
 Model views
-'''
+"""
 
 
 class ClientAdmin(ModelView):
@@ -98,8 +97,8 @@ class ClientAdmin(ModelView):
                               'dfp_display_name', 'products.product_type_name',
                               'account_manager.email')
     column_default_sort = ('client_organization_name')
-    column_sortable_list = (('account_manager', 'account_manager.email'), (
-        'secondary_manager', 'secondary_manager.email'),
+    column_sortable_list = (('account_manager', 'account_manager.email'),
+                            ('secondary_manager', 'secondary_manager.email'),
                             'client_organization_name', 'dfp_network_code',
                             'dfp_display_name')
     # yapf: disable
@@ -123,9 +122,21 @@ class ClientAdmin(ModelView):
     form_args = dict(account_manager=dict(
         label='Account Lead', query_factory=client_managers))
     form_columns = [
-        'client_organization_name', 'account_manager', 'secondary_manager',
-        'assigned_account_name', 'dfp_network_code', 'dfp_display_name',
-        'products', 'active_client_flag', 'notes'
+        'client_organization_name',
+        'account_manager',
+        'secondary_manager',
+        'assigned_account_name',
+        'dfp_network_code',
+        'dfp_display_name',
+        'products',
+        'oao_inbox_name',
+        'oao_escalation_group_name',
+        'oao_shared_folder',
+        'oao_wiki_page',
+        'contract_start_date',
+        'contract_end_date',
+        'active_client_flag',
+        'notes'
     ]
     form_excluded_columns = ['created_datetime', 'modified_datetime']
     column_labels = dict(
@@ -134,13 +145,17 @@ class ClientAdmin(ModelView):
         account_manager='Account Lead',
         secondary_manager='Secondary Lead',
         dfp_network_code='DFP Network',
-        dfp_display_name='DFP Display Name')
+        dfp_display_name='DFP Display Name',
+        oao_inbox_name='Inbox',
+        oao_escalation_group_name='Escalation Group',
+        oao_shared_folder='Google Drive Share',
+        oao_wiki_page='OAO Wiki URL')
 
 
 class ManagerEditableWidget(XEditableWidget):
-    '''
+    """
     Custom widget for editable Manager field in list view
-    '''
+    """
 
     def get_kwargs(self, subfield, kwargs):
         kwargs = super().get_kwargs(subfield, kwargs)
@@ -206,10 +221,10 @@ class ProductAdmin(ModelView):
         product_type_description='Description')
 
 
-'''
+"""
 Admin app provisioning. Instantiates Admin globally, for wsgi container
 Order in which views and links are added corresponds to main nav menu
-'''
+"""
 admin = Admin(
     app, name='OAO Account Administration', template_mode='bootstrap3')
 

@@ -1,4 +1,7 @@
-/_junk_drawer
-.git
+.env
+.gitignore
+.pgpass
+_junk_drawer/
+Pipfile.lock
+__pycache__
 /secret
-/__pycache__
