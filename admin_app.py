@@ -1,6 +1,7 @@
 import os
 
-from flask import Flask
+from admin_jwt import validate_iap_jwt_from_app_engine
+from flask import Flask, request
 from flask_admin import Admin
 from flask_admin.base import MenuLink
 from flask_admin.contrib.sqla import ModelView
@@ -27,7 +28,16 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def index():
-    return '<a href="/admin/client/?flt0_0=1">Admin Ahoy!</a>'
+    # Get email from IAP JWT identity. This validates the token.
+    project_number = os.getenv('PROJECT_NUMBER')
+    project_id = os.getenv('PROJECT_ID')
+    iap_jwt = request.headers.get('X-Goog-IAP-JWT-Assertion')
+    identity = validate_iap_jwt_from_app_engine(iap_jwt,
+                                                project_number,
+                                                project_id)
+    user_email = identity[1]
+    return '<a href="/admin/client/?flt0_0=1">Admin Ahoy!</a>, {}'.format(
+        user_email)
 
 
 """

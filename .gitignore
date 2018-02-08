@@ -6,9 +6,6 @@
 .coverage
 *.todo
 /staticfiles
-/_junk_drawer
-/secret
 /__pycache__
 account-admin-k8s.yml
-alembic*
 Pipfile.lock
