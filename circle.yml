@@ -7,7 +7,7 @@ machine:
 
 dependencies:
   pre:
-    - gcloud --quiet components update
+    - sudo gcloud --quiet components update
     - echo $gcloud_key | base64 --decode > gcloud.json
     - gcloud auth activate-service-account $gcloud_email --key-file gcloud.json
     - gcloud config set project $GCLOUD_PROJECT
