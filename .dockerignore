@@ -1,7 +1,0 @@
-.env
-.gitignore
-.pgpass
-_junk_drawer/
-Pipfile.lock
-__pycache__
-/secret

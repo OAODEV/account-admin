@@ -6,7 +6,6 @@ verify_ssl = true
 
 [dev-packages]
 
-alembic = "*"
 isort = "*"
 "psycopg2" = "*"
 
@@ -15,7 +14,6 @@ isort = "*"
 
 click = "*"
 flask = "*"
-flask-login = "*"
 flask-sqlalchemy = "*"
 google-api-python-client = "*"
 gunicorn = "*"
@@ -24,18 +22,18 @@ inflect = "*"
 itsdangerous = "*"
 "jinja2" = "*"
 markupsafe = "*"
-"oauth2client" = "*"
-oauthlib = "*"
 "pyasn1" = "*"
 "pyasn1-modules" = "*"
 requests = "*"
-requests-oauthlib = "*"
 rsa = "*"
 uritemplate = "*"
 werkzeug = "*"
 wtforms = "*"
-flask-admin = {git = "https://github.com/flask-admin/flask-admin.git", editable = true}
 sqlalchemy = "*"
+flask-admin = {git = "https://github.com/flask-admin/flask-admin.git", editable = true}
+"psycopg2" = "*"
+pyjwt = "*"
+cryptography = "*"
 
 
 [requires]
