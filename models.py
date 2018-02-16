@@ -53,6 +53,8 @@ class Client(Base):
     active_client_flag = Column(Boolean, server_default=text("true"))
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)
+    created_by = Column(Text)
+    modified_by = Column(Text)
 
     account_manager = relationship('Employee', foreign_keys=account_manager_id)
     secondary_manager = relationship(
@@ -81,6 +83,8 @@ class Product(Base):
     product_type_description = Column(Text)
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)
+    created_by = Column(Text)
+    modified_by = Column(Text)
 
     clients = relationship(
         'Client',
@@ -108,6 +112,8 @@ class Employee(Base):
     manager_person_id = Column(ForeignKey('person.person_id'))
     account_manager_flag = Column(Boolean)
     current_employee_flag = Column(Boolean, server_default=text("true"))
+    created_by = Column(Text)
+    modified_by = Column(Text)
     office = relationship('Office', backref='employee')
     manager = relationship(
         'Employee', remote_side=[person_id], order_by='Employee.email')
@@ -129,6 +135,8 @@ class Office(Base):
     office_name = Column(Text, nullable=False)
     created_datetime = Column(DateTime, server_default=text("now()"))
     modified_datetime = Column(DateTime)
+    created_by = Column(Text)
+    modified_by = Column(Text)
 
     def __str__(self):
         return self.office_name
