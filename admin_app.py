@@ -43,7 +43,10 @@ def identity():
 @app.route('/')
 def index():
     user_email = identity()
-    greeting_name = user_email.split('.')[0].title()
+    try:
+        greeting_name = user_email.split('.')[0].title()
+    except AttributeError:
+        greeting_name = 'neighbor'
     return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
         greeting_name)
 
@@ -106,8 +109,9 @@ class ClientAdmin(ModelView):
     edit_modal = True
 
     column_list = [
-        'client_organization_name', 'dfp_network_code', 'account_manager',
-        'secondary_manager', 'dfp_display_name'
+        'client_organization_name', 'client_organization_code',
+        'dfp_network_code', 'account_manager', 'secondary_manager',
+        'dfp_display_name'
     ]
     column_exclude_list = [
         'created_datetime',
@@ -146,11 +150,12 @@ class ClientAdmin(ModelView):
         account_manager=dict(
             label='Account Lead', query_factory=client_managers))
     form_columns = [
-        'client_organization_name', 'account_manager', 'secondary_manager',
-        'assigned_account_name', 'dfp_network_code', 'dfp_display_name',
-        'products', 'oao_inbox_name', 'oao_escalation_group_name',
-        'oao_shared_folder', 'oao_wiki_page', 'contract_start_date',
-        'contract_end_date', 'active_client_flag', 'notes'
+        'client_organization_name', 'client_organization_code',
+        'account_manager', 'secondary_manager', 'assigned_account_name',
+        'dfp_network_code', 'dfp_display_name', 'products', 'oao_inbox_name',
+        'oao_escalation_group_name', 'oao_shared_folder', 'oao_wiki_page',
+        'contract_start_date', 'contract_end_date', 'active_client_flag',
+        'notes'
     ]
     form_excluded_columns = [
         'created_datetime',
@@ -160,6 +165,7 @@ class ClientAdmin(ModelView):
     ]
     column_labels = dict(
         client_organization_name='Client',
+        client_organization_code='Client Code',
         active_client_flag='Active Client',
         account_manager='Account Lead',
         secondary_manager='Secondary Lead',
@@ -169,6 +175,11 @@ class ClientAdmin(ModelView):
         oao_escalation_group_name='Escalation Group',
         oao_shared_folder='Google Drive Share',
         oao_wiki_page='OAO Wiki URL')
+    form_widget_args = {
+        'client_organization_code': {
+            'readonly': True
+        },
+    }
 
     def on_model_change(self, form, Client, is_created):
         if is_created:

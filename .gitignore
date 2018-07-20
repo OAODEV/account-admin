@@ -9,3 +9,4 @@
 /__pycache__
 account-admin-k8s.yml
 Pipfile.lock
+client_secret.json
