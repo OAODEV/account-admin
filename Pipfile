@@ -1,17 +1,12 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 
-
 [dev-packages]
-
 isort = "*"
 "psycopg2" = "*"
 
-
 [packages]
-
 click = "*"
 flask = "*"
 flask-sqlalchemy = "*"
@@ -34,8 +29,7 @@ flask-admin = {git = "https://github.com/flask-admin/flask-admin.git", editable 
 "psycopg2" = "*"
 pyjwt = "*"
 cryptography = "*"
-
+records = "*"
 
 [requires]
-
 python_version = "3.6"
