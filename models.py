@@ -66,8 +66,9 @@ class Client(Base):
         passive_deletes=True)
 
     def __str__(self):
-        return '{0} ({1})'.format(self.client_organization_name,
-                                  self.dfp_network_code)
+        return '{0}: {1}({2})'.format(self.client_organization_name,
+                                      self.client_organization_code,
+                                      self.dfp_network_code)
 
 
 class Product(Base):

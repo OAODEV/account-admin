@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from admin_jwt import validate_iap_jwt_from_app_engine
 from flask import Flask, request
@@ -38,6 +39,23 @@ def identity():
                                                 project_id)
     user_email = identity[1]
     return user_email
+
+
+def generate_code(client):
+    if client.client_organization_code:
+        return client.client_organization_code
+    norm_name = client.assigned_account_name.upper().strip().replace(
+        'THE ', '')
+    abbrev_name = norm_name[:2]
+    try:
+        start_year = client.contract_start_date.year
+    except AttributeError:
+        start_year = datetime.now().year
+    append = str(
+        sum(bytearray(client.client_organization_name, 'utf-8')) %
+        999).zfill(3)
+    client_code = '{0}{1}-{2}'.format(abbrev_name, start_year, append)
+    return client_code
 
 
 @app.route('/')
@@ -181,11 +199,12 @@ class ClientAdmin(ModelView):
         },
     }
 
-    def on_model_change(self, form, Client, is_created):
+    def on_model_change(self, form, Client, is_created=False):
         if is_created:
             Client.created_by = identity()
         else:
             Client.modified_by = identity()
+        Client.client_organization_code = generate_code(Client)
 
 
 class ManagerEditableWidget(XEditableWidget):
