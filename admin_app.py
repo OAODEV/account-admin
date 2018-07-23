@@ -42,7 +42,13 @@ def identity():
 
 
 def generate_code(client):
+    """ Generate OAO Standard Client code value from
+        - First 2 letters of assigned account name
+        - Start year
+        - sum of unicode values of org name, modulo 999, zero-padded
+    """
     if client.client_organization_code:
+        # no-op if client already has a code
         return client.client_organization_code
     norm_name = client.assigned_account_name.upper().strip().replace(
         'THE ', '')
@@ -51,10 +57,10 @@ def generate_code(client):
         start_year = client.contract_start_date.year
     except AttributeError:
         start_year = datetime.now().year
-    append = str(
+    suffix = str(
         sum(bytearray(client.client_organization_name, 'utf-8')) %
         999).zfill(3)
-    client_code = '{0}{1}-{2}'.format(abbrev_name, start_year, append)
+    client_code = '{0}{1}-{2}'.format(abbrev_name, start_year, suffix)
     return client_code
 
 
@@ -166,7 +172,12 @@ class ClientAdmin(ModelView):
     # for account_manager
     form_args = dict(
         account_manager=dict(
-            label='Account Lead', query_factory=client_managers))
+            label='Account Lead', query_factory=client_managers),
+        client_organization_code=dict(
+            description=(
+                'OAO Standard Client Code: 1st two letters, start year, '
+                'three digits')
+        ))
     form_columns = [
         'client_organization_name', 'client_organization_code',
         'account_manager', 'secondary_manager', 'assigned_account_name',
@@ -193,6 +204,7 @@ class ClientAdmin(ModelView):
         oao_escalation_group_name='Escalation Group',
         oao_shared_folder='Google Drive Share',
         oao_wiki_page='OAO Wiki URL')
+    # Disable manual code entry
     form_widget_args = {
         'client_organization_code': {
             'readonly': True
@@ -200,6 +212,9 @@ class ClientAdmin(ModelView):
     }
 
     def on_model_change(self, form, Client, is_created=False):
+        """ Include user email in client created_by or modified_by field
+            and calculate the client code
+        """
         if is_created:
             Client.created_by = identity()
         else:
