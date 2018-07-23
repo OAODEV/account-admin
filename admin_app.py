@@ -204,7 +204,8 @@ class ClientAdmin(ModelView):
         oao_escalation_group_name='Escalation Group',
         oao_shared_folder='Google Drive Share',
         oao_wiki_page='OAO Wiki URL')
-    # Disable manual code entry
+    # Disable manual code entry/editing
+    # TODO: Allow this to be edited manually by certain users
     form_widget_args = {
         'client_organization_code': {
             'readonly': True
