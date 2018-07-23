@@ -3,8 +3,6 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-isort = "*"
-"psycopg2" = "*"
 
 [packages]
 click = "*"
@@ -25,11 +23,10 @@ uritemplate = "*"
 werkzeug = "*"
 wtforms = "*"
 sqlalchemy = "*"
-flask-admin = {git = "https://github.com/flask-admin/flask-admin.git", editable = true}
-"psycopg2" = "*"
+flask-admin = {editable = true, git = "https://github.com/flask-admin/flask-admin.git"}
+"psycopg2-binary" = "*"
 pyjwt = "*"
 cryptography = "*"
-records = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
