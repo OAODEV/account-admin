@@ -21,7 +21,7 @@ def make_secret_key():
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DBURL', ('postgres://account_admin_user@localhost:5454'
+    'DATABASE_URL', ('postgres://account_admin_user@localhost:5454'
               '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)

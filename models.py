@@ -7,8 +7,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 engine = create_engine(
-    os.getenv('DBURL', ('postgres://account_admin_user@localhost:5454'
-                        '/account_admin')))
+    os.getenv('DATABASE_URL', ('postgres://account_admin_user@localhost:5454'
+                               '/account_admin')))
 
 Base = declarative_base(engine)
 metadata = Base.metadata

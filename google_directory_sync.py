@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 engine = create_engine(
-    os.getenv('DBURL', ('postgres://account_admin_user@localhost:5433'
+    os.getenv('DATABASE_URL', ('postgres://account_admin_user@localhost:5433'
                         '/account_admin?sslmode=verify-ca')))
 Session = sessionmaker(bind=engine)
 
