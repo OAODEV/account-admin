@@ -4,18 +4,10 @@
 *.todo
 .DS_Store
 .coverage
-<<<<<<< HEAD
 .env
 /__pycache__
 /staticfiles
 Pipfile.lock
 account-admin-k8s.yml
 app.yaml
-=======
-*.todo
-/staticfiles
-/__pycache__
-account-admin-k8s.yml
-Pipfile.lock
->>>>>>> 01f4c5a425572a38b602a7283e46666a1042b694
 client_secret.json
