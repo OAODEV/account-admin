@@ -22,7 +22,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     'DATABASE_URL', ('postgres://account_admin_user@localhost:5454'
-              '/account_admin'))
+                     '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 """
@@ -221,12 +221,6 @@ class ClientAdmin(ModelView):
         else:
             Client.modified_by = identity()
         Client.client_organization_code = generate_code(Client)
-
-    def on_model_change(self, form, Client, is_created):
-        if is_created:
-            Client.created_by = identity()
-        else:
-            Client.modified_by = identity()
 
 
 class ManagerEditableWidget(XEditableWidget):
