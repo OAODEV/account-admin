@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from admin_jwt import validate_iap_jwt_from_app_engine
 from flask import Flask, request
@@ -20,7 +21,7 @@ def make_secret_key():
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', make_secret_key())
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DBURL', ('postgres://account_admin_user@localhost:5454'
+    'DATABASE_URL', ('postgres://account_admin_user@localhost:5454'
               '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -40,10 +41,36 @@ def identity():
     return user_email
 
 
+def generate_code(client):
+    """ Generate OAO Standard Client code value from
+        - First 2 letters of assigned account name
+        - Start year
+        - sum of unicode values of org name, modulo 999, zero-padded
+    """
+    if client.client_organization_code:
+        # no-op if client already has a code
+        return client.client_organization_code
+    norm_name = client.assigned_account_name.upper().strip().replace(
+        'THE ', '')
+    abbrev_name = norm_name[:2]
+    try:
+        start_year = client.contract_start_date.year
+    except AttributeError:
+        start_year = datetime.now().year
+    suffix = str(
+        sum(bytearray(client.client_organization_name, 'utf-8')) %
+        999).zfill(3)
+    client_code = '{0}{1}-{2}'.format(abbrev_name, start_year, suffix)
+    return client_code
+
+
 @app.route('/')
 def index():
     user_email = identity()
-    greeting_name = user_email.split('.')[0].title()
+    try:
+        greeting_name = user_email.split('.')[0].title()
+    except AttributeError:
+        greeting_name = 'neighbor'
     return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
         greeting_name)
 
@@ -106,8 +133,9 @@ class ClientAdmin(ModelView):
     edit_modal = True
 
     column_list = [
-        'client_organization_name', 'dfp_network_code', 'account_manager',
-        'secondary_manager', 'dfp_display_name'
+        'client_organization_name', 'client_organization_code',
+        'dfp_network_code', 'account_manager', 'secondary_manager',
+        'dfp_display_name'
     ]
     column_exclude_list = [
         'created_datetime',
@@ -144,13 +172,19 @@ class ClientAdmin(ModelView):
     # for account_manager
     form_args = dict(
         account_manager=dict(
-            label='Account Lead', query_factory=client_managers))
+            label='Account Lead', query_factory=client_managers),
+        client_organization_code=dict(
+            description=(
+                'OAO Standard Client Code: 1st two letters, start year, '
+                'three digits')
+        ))
     form_columns = [
-        'client_organization_name', 'account_manager', 'secondary_manager',
-        'assigned_account_name', 'dfp_network_code', 'dfp_display_name',
-        'products', 'oao_inbox_name', 'oao_escalation_group_name',
-        'oao_shared_folder', 'oao_wiki_page', 'contract_start_date',
-        'contract_end_date', 'active_client_flag', 'notes'
+        'client_organization_name', 'client_organization_code',
+        'account_manager', 'secondary_manager', 'assigned_account_name',
+        'dfp_network_code', 'dfp_display_name', 'products', 'oao_inbox_name',
+        'oao_escalation_group_name', 'oao_shared_folder', 'oao_wiki_page',
+        'contract_start_date', 'contract_end_date', 'active_client_flag',
+        'notes'
     ]
     form_excluded_columns = [
         'created_datetime',
@@ -160,6 +194,7 @@ class ClientAdmin(ModelView):
     ]
     column_labels = dict(
         client_organization_name='Client',
+        client_organization_code='Client Code',
         active_client_flag='Active Client',
         account_manager='Account Lead',
         secondary_manager='Secondary Lead',
@@ -169,6 +204,23 @@ class ClientAdmin(ModelView):
         oao_escalation_group_name='Escalation Group',
         oao_shared_folder='Google Drive Share',
         oao_wiki_page='OAO Wiki URL')
+    # Disable manual code entry/editing
+    # TODO: Allow this to be edited manually by certain users
+    form_widget_args = {
+        'client_organization_code': {
+            'readonly': True
+        },
+    }
+
+    def on_model_change(self, form, Client, is_created=False):
+        """ Include user email in client created_by or modified_by field
+            and calculate the client code
+        """
+        if is_created:
+            Client.created_by = identity()
+        else:
+            Client.modified_by = identity()
+        Client.client_organization_code = generate_code(Client)
 
     def on_model_change(self, form, Client, is_created):
         if is_created:

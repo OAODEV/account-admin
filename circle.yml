@@ -15,8 +15,3 @@ dependencies:
 test:
   override:
     - echo "true"
-deployment:
-  index:
-    branch: /.*/
-    commands:
-        - gcloud -q app deploy app.yaml 
