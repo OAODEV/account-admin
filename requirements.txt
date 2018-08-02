@@ -1,6 +1,7 @@
 -i https://pypi.python.org/simple
 -e git+https://github.com/flask-admin/flask-admin.git@7fa26ab227868ff7512bb25c26a30fd7d69184bc#egg=flask-admin
 asn1crypto==0.24.0
+authlib==0.8
 cachetools==2.1.0
 certifi==2018.4.16
 cffi==1.11.5
