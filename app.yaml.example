@@ -1,0 +1,17 @@
+service: account-admin
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT admin_app:app
+
+runtime_config:
+  python_version: 3
+
+env_variables:
+  DATABASE_URL: >- 
+    postgres://account_admin_user@/account_admin_master?host=/cloudsql/lexical-cider-93918:us-central1:pg-master
+  PGPASSWORD: 
+  PROJECT_NUMBER: 863717576768
+  PROJECT_ID: lexical-cider-93918
+
+beta_settings:
+    cloud_sql_instances: lexical-cider-93918:us-central1:pg-master

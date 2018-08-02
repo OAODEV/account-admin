@@ -1,8 +1,10 @@
 import os
 from datetime import datetime
+from functools import wraps
+from urllib.parse import urlencode
 
-from admin_jwt import validate_iap_jwt_from_app_engine
-from flask import Flask, request
+from authlib.flask.client import OAuth
+from flask import Flask, redirect, session, url_for
 from flask_admin import Admin
 from flask_admin.base import MenuLink
 from flask_admin.contrib.sqla import ModelView
@@ -25,20 +27,117 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
                      '/account_admin'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+
+""" Auth0 setup and methods
 """
-JWT token validator and user identity helper
+
+AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
+AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
+AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_BASE_URL = 'https://' + AUTH0_DOMAIN
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
+if not AUTH0_AUDIENCE:
+    AUTH0_AUDIENCE = AUTH0_BASE_URL + '/userinfo'
+
+oauth = OAuth(app)
+
+auth0 = oauth.register(
+    'auth0',
+    client_id=AUTH0_CLIENT_ID,
+    client_secret=AUTH0_CLIENT_SECRET,
+    api_base_url=AUTH0_BASE_URL,
+    access_token_url=AUTH0_BASE_URL + '/oauth/token',
+    authorize_url=AUTH0_BASE_URL + '/authorize',
+    client_kwargs={
+        'scope': 'openid profile',
+    },
+)
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'profile' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+@app.route('/')
+@requires_auth
+def index():
+    try:
+        greeting_name = session['profile']['name']
+    except AttributeError:
+        greeting_name = 'neighbor'
+    return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
+        greeting_name)
+
+
+@app.route('/callback')
+def callback_handling():
+    auth0.authorize_access_token()
+    resp = auth0.get('userinfo')
+    userinfo = resp.json()
+
+    session['jwt_payload'] = userinfo
+    session['profile'] = {
+        'user_id': userinfo['sub'],
+        'name': userinfo['name'],
+        'picture': userinfo['picture'],
+        # 'email': userinfo['email']
+    }
+    return redirect('/')
+
+
+@app.route('/login')
+def login():
+    return auth0.authorize_redirect(
+        redirect_uri=AUTH0_CALLBACK_URL, audience=AUTH0_AUDIENCE)
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    params = {
+        'returnTo': url_for('index', _external=True),
+        'client_id': AUTH0_CLIENT_ID
+    }
+    return redirect(auth0.api_base_url + '/v2/logout?' + urlencode(params))
+
+
+class AuthMixin():
+    def is_accessible(self):
+        if 'profile' in session:
+            return True
+        return False
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
+
+""" Helper functions for form choices
+TODO: Pull out to own file (or add to __init__?)
 """
 
 
-def identity():
-    # Get email from IAP JWT identity. This validates the token.
-    project_number = os.getenv('PROJECT_NUMBER')
-    project_id = os.getenv('PROJECT_ID')
-    iap_jwt = request.headers.get('X-Goog-IAP-JWT-Assertion')
-    identity = validate_iap_jwt_from_app_engine(iap_jwt, project_number,
-                                                project_id)
-    user_email = identity[1]
-    return user_email
+def client_managers():
+    return db.session.query(Employee).filter(
+        Employee.account_manager_flag.is_(True))
+
+
+def employee_managers():
+    managers = db.session.query(Employee.manager_person_id).distinct()
+    managers = managers.filter(Employee.manager_person_id.isnot(None))
+    return db.session.query(Employee).filter(Employee.person_id.in_(managers))
+
+
+def get_products():
+    products = db.session.query(Product).all()
+    return [(str(product), product) for product in products]
 
 
 def generate_code(client):
@@ -62,39 +161,6 @@ def generate_code(client):
         999).zfill(3)
     client_code = '{0}{1}-{2}'.format(abbrev_name, start_year, suffix)
     return client_code
-
-
-@app.route('/')
-def index():
-    user_email = identity()
-    try:
-        greeting_name = user_email.split('.')[0].title()
-    except AttributeError:
-        greeting_name = 'neighbor'
-    return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
-        greeting_name)
-
-
-"""
-Helper functions for form choices
-TODO: Pull out to own file (or add to __init__?)
-"""
-
-
-def client_managers():
-    return db.session.query(Employee).filter(
-        Employee.account_manager_flag.is_(True))
-
-
-def employee_managers():
-    managers = db.session.query(Employee.manager_person_id).distinct()
-    managers = managers.filter(Employee.manager_person_id.isnot(None))
-    return db.session.query(Employee).filter(Employee.person_id.in_(managers))
-
-
-def get_products():
-    products = db.session.query(Product).all()
-    return [(str(product), product) for product in products]
 
 
 """
@@ -124,7 +190,7 @@ Model views
 """
 
 
-class ClientAdmin(ModelView):
+class ClientAdmin(AuthMixin, ModelView):
     # Hide from menu, so we can replace with filtered view link
     def is_visible(self):
         return False
@@ -217,9 +283,9 @@ class ClientAdmin(ModelView):
             and calculate the client code
         """
         if is_created:
-            Client.created_by = identity()
+            Client.created_by = session['profile']['email']
         else:
-            Client.modified_by = identity()
+            Client.modified_by = session['profile']['email']
         Client.client_organization_code = generate_code(Client)
 
 
@@ -238,7 +304,7 @@ class ManagerEditableWidget(XEditableWidget):
         return kwargs
 
 
-class EmployeeAdmin(ModelView):
+class EmployeeAdmin(AuthMixin, ModelView):
     # override base view query to filter out former employees
     def get_query(self):
         return self.session.query(self.model).filter(
@@ -283,12 +349,12 @@ class EmployeeAdmin(ModelView):
 
     def on_model_change(self, form, Employee, is_created):
         if is_created:
-            Employee.created_by = identity()
+            Employee.created_by = session['profile']['email']
         else:
-            Employee.modified_by = identity()
+            Employee.modified_by = session['profile']['email']
 
 
-class ProductAdmin(ModelView):
+class ProductAdmin(AuthMixin, ModelView):
     edit_modal = True
 
     column_exclude_list = [
@@ -305,9 +371,9 @@ class ProductAdmin(ModelView):
 
     def on_model_change(self, form, Product, is_created):
         if is_created:
-            Product.created_by = identity()
+            Product.created_by = session['profile']['email']
         else:
-            Product.modified_by = identity()
+            Product.modified_by = session['profile']['email']
 
 
 """
@@ -324,6 +390,7 @@ admin.add_link(
 admin.add_link(MenuLink(name='All', category='Client', url='/admin/client'))
 admin.add_view(EmployeeAdmin(Employee, db.session))
 admin.add_view(ProductAdmin(Product, db.session))
+admin.add_link(MenuLink(name='Logout', url='/logout'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -29,6 +29,7 @@ flask-admin = {editable = true, git = "https://github.com/flask-admin/flask-admi
 "psycopg2-binary" = "*"
 pyjwt = "*"
 cryptography = "*"
+authlib = "*"
 
 [requires]
 python_version = "3.7"
