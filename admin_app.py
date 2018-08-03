@@ -70,7 +70,7 @@ def requires_auth(f):
 @requires_auth
 def index():
     try:
-        greeting_name = session['profile']['name']
+        greeting_name = session['profile']['name'].split()[0]
     except AttributeError:
         greeting_name = 'neighbor'
     return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
@@ -103,7 +103,7 @@ def login():
 def logout():
     session.clear()
     params = {
-        'returnTo': url_for('index', _external=True),
+        'returnTo': url_for('index', _external=True, _scheme='https'),
         'client_id': AUTH0_CLIENT_ID
     }
     return redirect(auth0.api_base_url + '/v2/logout?' + urlencode(params))
