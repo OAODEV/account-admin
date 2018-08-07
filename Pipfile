@@ -3,8 +3,6 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-"flake8" = "*"
-yapf = "*"
 
 [packages]
 click = "*"
@@ -26,10 +24,8 @@ werkzeug = "*"
 wtforms = "*"
 sqlalchemy = "*"
 flask-admin = {editable = true, git = "https://github.com/flask-admin/flask-admin.git"}
-"psycopg2-binary" = "*"
-pyjwt = "*"
-cryptography = "*"
 authlib = "*"
+"psycopg2-binary" = "*"
 
 [requires]
 python_version = "3.7"

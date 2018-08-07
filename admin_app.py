@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from functools import wraps
 from urllib.parse import urlencode
 
 from authlib.flask.client import OAuth
@@ -11,8 +10,10 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import BaseSQLAFilter
 from flask_admin.model.widgets import XEditableWidget
 from flask_sqlalchemy import SQLAlchemy
-from models import Client, Employee, Product
 from sqlalchemy.sql.functions import func
+from werkzeug.exceptions import BadRequestKeyError
+
+from models import Client, Employee, Product
 
 
 def make_secret_key():
@@ -31,7 +32,6 @@ db = SQLAlchemy(app)
 
 """ Auth0 setup and methods
 """
-
 AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
 AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
 AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
@@ -51,35 +51,27 @@ auth0 = oauth.register(
     access_token_url=AUTH0_BASE_URL + '/oauth/token',
     authorize_url=AUTH0_BASE_URL + '/authorize',
     client_kwargs={
-        'scope': 'openid profile',
+        'scope': 'openid email profile',
     },
 )
 
 
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'profile' not in session:
-            return redirect('/login')
-        return f(*args, **kwargs)
-
-    return decorated
-
-
 @app.route('/')
-@requires_auth
 def index():
-    try:
-        greeting_name = session['profile']['name'].split()[0]
-    except AttributeError:
-        greeting_name = 'neighbor'
-    return '<a href="/admin/client/?flt0_0=1">Admin Ahoy</a>, {}!'.format(
-        greeting_name)
+    if 'profile' in session:
+        return redirect('/admin/client/?flt0_0=1')
+    else:
+        return redirect('/login')
 
 
 @app.route('/callback')
 def callback_handling():
-    auth0.authorize_access_token()
+    try:
+        auth0.authorize_access_token()
+    except BadRequestKeyError:
+        return ('<h1>Access denied</h1>'
+                '<p>Please <a href="/login">login</a> '
+                'with a valid adops.com account</p>'), 400
     resp = auth0.get('userinfo')
     userinfo = resp.json()
 
@@ -87,10 +79,9 @@ def callback_handling():
     session['profile'] = {
         'user_id': userinfo['sub'],
         'name': userinfo['name'],
-        'picture': userinfo['picture'],
-        # 'email': userinfo['email']
+        'email': userinfo['email']
     }
-    return redirect('/')
+    return redirect('/admin/client/?flt0_0=1')
 
 
 @app.route('/login')
@@ -116,11 +107,11 @@ class AuthMixin():
         return False
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login'))
+        return redirect(url_for('index'))
 
 
 """ Helper functions for form choices
-TODO: Pull out to own file (or add to __init__?)
+    TODO: Pull out to own file (or add to __init__?)
 """
 
 
@@ -163,8 +154,7 @@ def generate_code(client):
     return client_code
 
 
-"""
-Custom filter classes for ClientAdmin view
+""" Custom filter classes for ClientAdmin view
 """
 
 
@@ -185,8 +175,7 @@ class AccountLeadFilter(BaseSQLAFilter):
         return 'equals'
 
 
-"""
-Model views
+""" Model views
 """
 
 
@@ -242,8 +231,7 @@ class ClientAdmin(AuthMixin, ModelView):
         client_organization_code=dict(
             description=(
                 'OAO Standard Client Code: 1st two letters, start year, '
-                'three digits')
-        ))
+                'three digits')))
     form_columns = [
         'client_organization_name', 'client_organization_code',
         'account_manager', 'secondary_manager', 'assigned_account_name',
@@ -376,9 +364,9 @@ class ProductAdmin(AuthMixin, ModelView):
             Product.modified_by = session['profile']['email']
 
 
-"""
-Admin app provisioning. Instantiates Admin globally, for wsgi container
-Order in which views and links are added corresponds to main nav menu
+""" Admin app provisioning. 
+    - Instantiates Admin globally, for wsgi container
+    - Order in which views and links are added corresponds to main nav menu
 """
 admin = Admin(
     app, name='OAO Account Administration', template_mode='bootstrap3')
