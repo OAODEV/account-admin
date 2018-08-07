@@ -364,7 +364,7 @@ class ProductAdmin(AuthMixin, ModelView):
             Product.modified_by = session['profile']['email']
 
 
-""" Admin app provisioning. 
+""" Admin app provisioning.
     - Instantiates Admin globally, for wsgi container
     - Order in which views and links are added corresponds to main nav menu
 """
