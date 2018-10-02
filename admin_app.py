@@ -178,6 +178,10 @@ class AccountLeadFilter(BaseSQLAFilter):
 
 
 class ClientAdmin(AuthMixin, ModelView):
+    list_template = 'list.html'
+    create_template = 'create.html'
+    edit_template = 'edit.html'
+
     # Hide from menu, so we can replace with filtered view link
     def is_visible(self):
         return False
@@ -291,6 +295,10 @@ class ManagerEditableWidget(XEditableWidget):
 
 
 class EmployeeAdmin(AuthMixin, ModelView):
+    list_template = 'list.html'
+    create_template = 'create.html'
+    edit_template = 'edit.html'
+
     # override base view query to filter out former employees
     def get_query(self):
         return self.session.query(self.model).filter(
@@ -341,6 +349,10 @@ class EmployeeAdmin(AuthMixin, ModelView):
 
 
 class ProductAdmin(AuthMixin, ModelView):
+    list_template = 'list.html'
+    create_template = 'create.html'
+    edit_template = 'edit.html'
+
     edit_modal = True
 
     column_exclude_list = [
@@ -367,7 +379,10 @@ class ProductAdmin(AuthMixin, ModelView):
     - Order in which views and links are added corresponds to main nav menu
 """
 admin = Admin(
-    app, name='OAO Account Administration', template_mode='bootstrap3')
+    app,
+    name='OAO Account Administration',
+    base_template='layout.html',
+    template_mode='bootstrap3')
 
 admin.add_view(ClientAdmin(Client, db.session))
 # custom links for clients, to include active_client_flag filter
